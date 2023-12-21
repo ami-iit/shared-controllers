@@ -31,12 +31,12 @@ conda activate sc_env
 Install dependencies:
 ```
 conda install -c conda-forge pip matplotlib qpsolvers resolve-robotics-uri-py
-conda install -c conda-forge -c robotology yarp idyntree
+conda install -c conda-forge yarp idyntree
 ```
 **Optional**
 In order to run the controllers and the simulations, additional packages are required:
 ```
-conda install -c conda-forge -c robotology gazebo-yarp-plugins icub-models bipedal-locomotion-framework
+conda install -c conda-forge gazebo-yarp-plugins icub-models bipedal-locomotion-framework
 ```
 
 ### Library
