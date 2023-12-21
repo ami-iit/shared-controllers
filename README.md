@@ -1,4 +1,4 @@
-# Whole-Body Controllers
+# Shared Controllers
 
 This repository provides the following software:
 - [`lib`](lib): contains `wholebodycontrollib`, a python library for controlling humanoid robots.
@@ -24,8 +24,8 @@ All the required dependencies can be installed via `conda`.
 
 Create the conda environment:
 ```
-conda create -n wbc_env python=3.10
-conda activate wbc_env
+conda create -n sc_env python=3.10
+conda activate sc_env
 ```
 
 Install dependencies:
@@ -42,12 +42,12 @@ conda install -c conda-forge -c robotology gazebo-yarp-plugins icub-models biped
 ### Library
 In order to install the library, activate the environment in which the dependencies are installed:
 ```
-conda activate wbc_env
+conda activate sc_env
 ```
 
 Clone the repository and install the package:
 ```
-git clone https://github.com/ami-iit/paper_2023_science_ergocub.git
-cd paper_2023_science_ergocub/src/whole-body-controllers
+git clone https://github.com/ami-iit/shared-controllers.git
+cd shared-controllers
 pip install .
 ```
