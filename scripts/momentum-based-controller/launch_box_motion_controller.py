@@ -15,6 +15,8 @@ from wholebodycontrollib import visualizer
 from wholebodycontrollib import statemachine
 from wholebodycontrollib import loggerplotterlib
 
+from utils import configuration_handler
+
 
 sys.path.append('..')
 import robots.ergoCubGazeboV1.configuration as robot_configuration
@@ -29,7 +31,7 @@ save_figure = True
 
 # Hands wrenches
 consider_hands_wrenches = True
-load = 0 # Kg
+load = 1 # Kg mass of the top box
 squeeze_force = 0 # N
 
 if consider_hands_wrenches:
@@ -70,7 +72,7 @@ def termination():
     if use_profiler:
         profiler.print_timers_total_time()
         fig_timer = profiler.plot_timers(show_plot=False)
-        
+
     fig_com = None
     fig_com_vel = None
     fig_ang_mom = None
@@ -81,7 +83,7 @@ def termination():
         fig_com = logger.plot_data('t', ['p_com', 'p_com_des'], 'CoM position tracking', show_plot=False)
         fig_com_vel = logger.plot_data('t', ['v_com', 'v_com_des'], 'CoM velocity tracking', show_plot=False)
         fig_ang_mom = logger.plot_data('t', ['ang_mom', 'ang_mom_des'], 'Angular Momentum tracking', show_plot=False)
-        
+
 
     if save_figure:
         # Create directory to save figure
@@ -104,7 +106,7 @@ def termination():
 def handler(signum, frame):
     print("Ctrl-c was pressed. Closing the application")
     termination()
-    
+
     exit(1)
 signal.signal(signal.SIGINT, handler)
 
@@ -139,6 +141,9 @@ wrench_qp = wholebodycontrol.WrenchQP()
 # initialize state machine
 state_machine = statemachine.StateMachine(repeat=False)
 
+# initialize configurations
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["hands_70", "hands_90"], [1 ,40])
+
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
 
@@ -160,7 +165,7 @@ if use_logger:
 box_basestate_port = yarp.BufferedPortBottle()
 box_basestate_port.open("/box/base/state:i")
 
-yarp.Network.connect("/box/base/state:o", box_basestate_port.getName())
+yarp.Network.connect("/box/base/state:o",  box_basestate_port.getName())
 
 box_pose_bottle = box_basestate_port.read(True)
 
@@ -169,6 +174,9 @@ time.sleep(0.01)
 # Extracting the first three elements into one vector
 box_pose_vector = [box_pose_bottle.get(i).asFloat64() for i in range(6)]
 box_velocity = [box_pose_bottle.get(i).asFloat64() for i in range(6, 12)]
+
+# print that i am here
+print("Box pose------------------: " + str(box_pose_vector))
 
 box_pose_idyn = iDynTree.Transform()
 box_pose_idyn.setPosition(np.array(box_pose_vector[:3]))
@@ -180,7 +188,7 @@ box_model.set_state(box_pose, [], box_velocity, [])
 
 p_box_com_des = box_model.get_center_of_mass_position()
 
-p_box_com_des[2] = p_box_com_des[2] - 0.3 
+p_box_com_des[2] = p_box_com_des[2] - 0.3
 
 
 # Extracting the next three elements into a separate vector
@@ -213,7 +221,7 @@ while True:
     box_pose_bottle = box_basestate_port.read(False)
 
     if box_pose_bottle is not None:
-        # Extracting the first three elements into one vector
+        # Extracting the first 6 elements into one vector
         box_pose_vector = [box_pose_bottle.get(i).asFloat64() for i in range(6)]
 
         box_pose_idyn = iDynTree.Transform()
@@ -242,7 +250,7 @@ while True:
     if use_profiler : profiler.start_timer(timer_name='ComputeKinematics', now=time.time())
 
     model.set_state(base_pose, s, w_b, ds)
-    
+
     J_feet = model.get_frames_jacobian(["l_sole", "r_sole"])
     if consider_hands_wrenches:
         J_l_hand = model.get_frames_jacobian(["l_hand_palm"])
@@ -252,13 +260,13 @@ while True:
     if consider_hands_wrenches:
         Jdot_nu_l_hand = model.get_frames_bias_acceleration(["l_hand_palm"])
         Jdot_nu_r_hand = model.get_frames_bias_acceleration(["r_hand_palm"])
-    
+
     if consider_hands_wrenches:
         w_H_frames = model.get_frames_transform(["l_sole", "r_sole", "l_hand_palm", "r_hand_palm"])
     else:
         w_H_frames = model.get_frames_transform(["l_sole", "r_sole"])
 
-    
+
     box_model.set_state(box_pose, [], box_velocity, [])
     w_H_frames_box = box_model.get_frames_transform(["side1_contact_link", "side2_contact_link"])
     H_box = box_model.get_centroidal_momentum()
@@ -271,22 +279,9 @@ while True:
     p_com = model.get_center_of_mass_position()
     v_com = model.get_center_of_mass_velocity()
 
-    if consider_hands_wrenches:
-        # Get adjoint transform from l_hand to r_hand in mixed representation
-        w_H_l_hand = model.get_frames_transform(["l_hand_palm"])
-        w_H_r_hand = model.get_frames_transform(["r_hand_palm"])
-        r_i   = w_H_r_hand[0:3,3] - w_H_l_hand[0:3,3]
-        skew_r_i = np.array([[0,      -r_i[2],  r_i[1]], 
-                                [r_i[2],       0, -r_i[0]], 
-                                [-r_i[1], r_i[0],       0]])
-        l_hand_X_r_hand = np.block([[np.eye(3), skew_r_i],
-                                   [np.zeros([3, 3]),  np.eye(3)]]) 
-            
 
     if consider_hands_wrenches:
         Jf = np.vstack((J_feet,J_l_hand,J_r_hand))
-        # Jc = np.vstack((J_feet,J_l_hand - l_hand_X_r_hand @ J_r_hand))
-        # Jdot_nu = np.concatenate((Jdot_nu_feet, Jdot_nu_l_hand - l_hand_X_r_hand @ Jdot_nu_r_hand))
         Jc = J_feet
         Jdot_nu = Jdot_nu_feet
     else:
@@ -304,7 +299,8 @@ while True:
         configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 20.0)
         state_machine.add_configuration(configuration_0)
 
-        state_machine.add_configuration(configuration_0)
+        for configuration in configurations:
+            state_machine.add_configuration(configuration)
 
         first_run = False
 
@@ -326,7 +322,7 @@ while True:
     p_com_des = model.get_center_of_mass_position()
     acc_com_des = model.get_center_of_mass_acceleration(w_dot_b_des, joint_acc_des)
 
-    
+
     postural_task_controller.set_desired_posture(joint_pos_des[idx_torque_controlled_joints], joint_vel_des[idx_torque_controlled_joints])
 
     momentum_controller.set_desired_center_of_mass_trajectory(p_com_des, v_com_des, acc_com_des)
@@ -366,16 +362,16 @@ while True:
             Aeq_hand = np.eye(6)
             beq_hand = np.zeros(6)
             Aeq_aug = np.block([[Aeq],
-                                [np.zeros([6,12]),  Aeq_box]]) 
-            
+                                [np.zeros([6,12]),  Aeq_box]])
+
             beq_aug = np.concatenate((beq, beq_box))
-            
+
             Adeq_aug = np.block([Adeq,  np.zeros([Adeq.shape[0], 12])])
 
         [tau_sigma, tau_model] = wholebodycontrol.get_torques_projected_dynamics(tau_0_model, tau_0_sigma, Jc_ctrl, Jf_ctrl, Jdot_nu, M_ctrl, h_ctrl, B_ctrl)
-        
+
         if use_profiler : profiler.stop_timer(timer_name='Controller', now=time.time())
-        
+
         # solve QP optimization
         if use_profiler : profiler.start_timer(timer_name='QP', now=time.time())
         if consider_hands_wrenches:
@@ -424,7 +420,7 @@ while True:
         logger.append_data(logger_data)
 
         if use_profiler : profiler.stop_timer(timer_name='Plotter', now=time.time())
-    
+
     if use_profiler:
         profiler.stop_timer("LoopControl", time.time())
 

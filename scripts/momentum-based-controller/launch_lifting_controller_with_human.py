@@ -17,7 +17,7 @@ from wholebodycontrollib import loggerplotterlib
 sys.path.append('..')
 import robots.ergoCubSN000.configuration as robot_configuration
 import robots.human.configuration as human_configuration
-from utils import configuration_hadler
+from utils import configuration_handler
 
 
 # Flags
@@ -72,7 +72,7 @@ def termination():
     if use_profiler:
         profiler.print_timers_total_time()
         fig_timer = profiler.plot_timers(show_plot=False)
-        
+
     fig_com = None
     fig_com_vel = None
     fig_ang_mom = None
@@ -83,7 +83,7 @@ def termination():
         fig_com = logger.plot_data('t', ['p_com', 'p_com_des'], 'CoM position tracking', show_plot=False)
         fig_com_vel = logger.plot_data('t', ['v_com', 'v_com_des'], 'CoM velocity tracking', show_plot=False)
         fig_ang_mom = logger.plot_data('t', ['ang_mom', 'ang_mom_des'], 'Angular Momentum tracking', show_plot=False)
-        
+
 
     if save_figure:
         # Create directory to save figure
@@ -106,7 +106,7 @@ def termination():
 def handler(signum, frame):
     print("Ctrl-c was pressed. Closing the application")
     termination()
-    
+
     exit(1)
 signal.signal(signal.SIGINT, handler)
 
@@ -134,7 +134,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # Lifting configurations
-configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["hands_70", "hands_100"], [1 ,40])
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["hands_70", "hands_100"], [1 ,40])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
@@ -201,7 +201,7 @@ while True:
     if use_profiler : profiler.start_timer(timer_name='ComputeKinematics', now=time.time())
 
     model.set_state(base_pose, s, w_b, ds)
-    
+
     J_feet = model.get_frames_jacobian(["l_sole", "r_sole"])
     if consider_hands_wrenches:
         J_l_hand = model.get_frames_jacobian(["l_hand_palm"])
@@ -211,7 +211,7 @@ while True:
     if consider_hands_wrenches:
         Jdot_nu_l_hand = model.get_frames_bias_acceleration(["l_hand_palm"])
         Jdot_nu_r_hand = model.get_frames_bias_acceleration(["r_hand_palm"])
-    
+
     if consider_hands_wrenches:
         w_H_frames = model.get_frames_transform(["l_sole", "r_sole", "l_hand_palm", "r_hand_palm"])
     else:
@@ -229,12 +229,12 @@ while True:
         w_H_l_hand = model.get_frames_transform(["l_hand_palm"])
         w_H_r_hand = model.get_frames_transform(["r_hand_palm"])
         r_i   = w_H_r_hand[0:3,3] - w_H_l_hand[0:3,3]
-        skew_r_i = np.array([[0,      -r_i[2],  r_i[1]], 
-                                [r_i[2],       0, -r_i[0]], 
+        skew_r_i = np.array([[0,      -r_i[2],  r_i[1]],
+                                [r_i[2],       0, -r_i[0]],
                                 [-r_i[1], r_i[0],       0]])
         l_hand_X_r_hand = np.block([[np.eye(3), skew_r_i],
-                                   [np.zeros([3, 3]),  np.eye(3)]]) 
-            
+                                   [np.zeros([3, 3]),  np.eye(3)]])
+
 
     if consider_hands_wrenches:
         Jf = np.vstack((J_feet,J_l_hand,J_r_hand))
@@ -284,7 +284,7 @@ while True:
     p_com_des = model.get_center_of_mass_position()
     acc_com_des = model.get_center_of_mass_acceleration(w_dot_b_des, joint_acc_des)
 
-    
+
     postural_task_controller.set_desired_posture(joint_pos_des[idx_torque_controlled_joints], joint_vel_des[idx_torque_controlled_joints])
 
     momentum_controller.set_desired_center_of_mass_trajectory(p_com_des, v_com_des, acc_com_des)
@@ -321,16 +321,16 @@ while True:
             beq_hand = np.zeros(6)
             Aeq_aug = np.block([[Aeq],
                                 [np.zeros([6,12]),  np.eye(6),     np.zeros([6,6])],
-                                [np.zeros([6,12]),  np.zeros([6,6]), np.eye(6)]]) 
-            
+                                [np.zeros([6,12]),  np.zeros([6,6]), np.eye(6)]])
+
             beq_aug = np.concatenate((beq, f_l_hand_des, f_r_hand_des))
-            
+
             Adeq_aug = np.block([Adeq,  np.zeros([Adeq.shape[0], 12])])
 
         [tau_sigma, tau_model] = wholebodycontrol.get_torques_projected_dynamics(tau_0_model, tau_0_sigma, Jc_ctrl, Jf_ctrl, Jdot_nu, M_ctrl, h_ctrl, B_ctrl)
-        
+
         if use_profiler : profiler.stop_timer(timer_name='Controller', now=time.time())
-        
+
         # solve QP optimization
         if use_profiler : profiler.start_timer(timer_name='QP', now=time.time())
         if consider_hands_wrenches:
@@ -357,7 +357,7 @@ while True:
 
     if use_profiler : profiler.stop_timer(timer_name='SetOutput', now=time.time())
 
-        
+
 
     # Update the visualier
     if use_visualizer:
@@ -385,7 +385,7 @@ while True:
         logger.append_data(logger_data)
 
         if use_profiler : profiler.stop_timer(timer_name='Plotter', now=time.time())
-    
+
     if use_profiler:
         profiler.stop_timer("LoopControl", time.time())
 

@@ -3,7 +3,7 @@ from wholebodycontrollib import visualizer
 from wholebodycontrollib import wholebodylib
 from wholebodycontrollib import robotInterface
 
-from utils import configuration_hadler
+from utils import configuration_handler
 
 import time
 import sys
@@ -26,7 +26,7 @@ state_machine = statemachine.StateMachine(repeat=False)
 
 
 # Lifting Configurations
-configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["hands_70", "hands_70", "hands_100"], [1 ,1, 100])
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["hands_70", "hands_70", "hands_100"], [1 ,1, 100])
 
 
 # Connect with human
