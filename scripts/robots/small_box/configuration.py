@@ -1,7 +1,13 @@
+import os
+
 # Model
-robot_name = "box"
-urdf_path = "/home/icub/software/dic-iit/element_ergonomy-control/build/install/share/ergonomy-control/robots/small_box/small_box.urdf"
-base_link = "base_link"
+box_urdf = os.environ.get('SMALL_BOX_MODEL')
+if box_urdf:
+    robot_name = "box"
+    urdf_path = box_urdf
+    base_link = "base_link"
+else:
+    print("Could not find the box model. Please set the environment variable SMALL_BOX_MODEL to the path of the box model.")
 
 ## Gains
 controller_gains = {}
