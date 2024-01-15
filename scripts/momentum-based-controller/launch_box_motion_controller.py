@@ -88,6 +88,8 @@ def termination():
         fig_ang_mom = logger.plot_data('t', ['ang_mom', 'ang_mom_des'], 'Angular Momentum tracking', show_plot=False)
 
         fig_com_box = logger.plot_data('t', ['p_box_com', 'p_box_com_des'], 'Box CoM position tracking', show_plot=False)
+        fig_ang_mom_box = logger.plot_data('t', ['ang_mom_box', 'ang_mom_box_des'], 'Box angular Momentum tracking', show_plot=False)
+
 
     if save_figure:
         # Create directory to save figure
@@ -103,7 +105,8 @@ def termination():
             fig_ang_mom.savefig('figure/angular_momentum_tracking.png')
         if fig_com_box:
             fig_com_box.savefig('figure/box_com_position_tracking.png')
-
+        if fig_ang_mom_box:
+            fig_ang_mom_box.savefig('figure/box_angular_momentum_tracking.png')
 
     if plot_data:
         plt.show()
@@ -151,7 +154,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # initialize configurations
-configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "hands_120", "box_manipulation_1"], [1 ,40, 80])
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "hands_120"], [20 ,40])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
@@ -168,7 +171,7 @@ if use_visualizer:
 if use_logger:
 
     logger = loggerplotterlib.LoggerPlotter()
-    logger.add_data_variables(['t', 'p_com', 'p_com_des', 'v_com', 'v_com_des', 'ang_mom', 'ang_mom_des', 'p_box_com', 'p_box_com_des', 'joint_pos', 'joint_pos_des', 'tau'])
+    logger.add_data_variables(['t', 'p_com', 'p_com_des', 'v_com', 'v_com_des', 'ang_mom', 'ang_mom_des', 'p_box_com', 'p_box_com_des', 'ang_mom_box', 'ang_mom_box_des' , 'joint_pos', 'joint_pos_des', 'tau'])
 
 # # open port to read box pose
 box_basestate_port = yarp.BufferedPortBottle()
@@ -184,9 +187,6 @@ time.sleep(0.01)
 box_pose_vector = [box_pose_bottle.get(i).asFloat64() for i in range(6)]
 box_velocity = [box_pose_bottle.get(i).asFloat64() for i in range(6, 12)]
 
-# print that i am here
-print("Box pose------------------: " + str(box_pose_vector))
-
 box_pose_idyn = iDynTree.Transform()
 box_pose_idyn.setPosition(np.array(box_pose_vector[:3]))
 box_pose_idyn.setRotation(iDynTree.Rotation().RPY(box_pose_vector[3], box_pose_vector[4], box_pose_vector[5]))
@@ -197,11 +197,7 @@ box_model.set_state(box_pose, [], box_velocity, [])
 
 p_box_com_des = box_model.get_center_of_mass_position()
 
-p_box_com_des[2] = p_box_com_des[2] - 0.3
 
-
-#Extracting the next three elements into a separate vector
-box_velocity = [box_pose_bottle.get(i).asFloat64() for i in range(6, 12)]
 
 # reset clock
 time_prev = time.time()
@@ -232,15 +228,18 @@ while True:
     if box_pose_bottle is not None:
         # Extracting the first 6 elements into one vector
         box_pose_vector = [box_pose_bottle.get(i).asFloat64() for i in range(6)]
+        box_velocity_vector = [box_pose_bottle.get(i).asFloat64() for i in range(6, 12)]
 
         box_pose_idyn = iDynTree.Transform()
         box_pose_idyn.setPosition(np.array(box_pose_vector[:3]))
         box_pose_idyn.setRotation(iDynTree.Rotation().RPY(box_pose_vector[3], box_pose_vector[4], box_pose_vector[5]))
 
         box_pose = box_pose_idyn.asHomogeneousTransform().toNumPy()
+        p_box_com_des  = box_pose_idyn.getPosition().toNumPy()
+        r_box_com_des     = box_pose_idyn.getRotation().asRPY().toNumPy()
 
-        # Extracting the next three elements into a separate vector
-        box_velocity = [box_pose_bottle.get(i).asFloat64() for i in range(6, 12)]
+        pd_box_com_des = np.array(box_velocity_vector[:3])
+        omega_box_com_des = np.array(box_velocity_vector[3:])
 
 
     # get kinematic state
@@ -248,7 +247,6 @@ while True:
 
     s = robot_interface.get_joints_position()
     ds = robot_interface.get_joints_velocity()
-    # tau_meas = robot_interface.get_joints_torque()
     base_pose = model.get_base_pose_from_contacts(s, {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)})
     w_b = model.get_base_velocity_from_contacts(base_pose, s, ds, ["l_sole", "r_sole"])
 
@@ -307,23 +305,19 @@ while True:
     if first_run:
         joint_pos_des = np.copy(s)
         p_com_des = np.copy(p_com)
-        configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 20.0)
+        configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 10.0)
         state_machine.add_configuration(configuration_0)
+        configuration_1 = configurations[0]
+        state_machine.add_configuration(configuration_1)
 
-        for configuration in configurations:
-            state_machine.add_configuration(configuration)
 
         first_run = False
 
+    # print("Desired box position: " + str(p_box_com_des))
 
     if not state_machine.update(time.time()):
         break
     joint_pos_des, joint_vel_des, joint_acc_des, _, _, _ = state_machine.get_state()
-    # print desired joints positions, ..etc
-    print("Desired joints positions: " + str(joint_pos_des))
-    print("Desired joints velocities: " + str(joint_vel_des))
-    print("Desired joints accelerations: " + str(joint_acc_des))
-
 
     # Get center of mass trajectory from forward kinematics
     base_pose_des = model.get_base_pose_from_contacts(joint_pos_des, {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)})
@@ -336,17 +330,14 @@ while True:
     v_com_des = model.get_center_of_mass_velocity()
     p_com_des = model.get_center_of_mass_position()
     acc_com_des = model.get_center_of_mass_acceleration(w_dot_b_des, joint_acc_des)
-
-
     postural_task_controller.set_desired_posture(joint_pos_des[idx_torque_controlled_joints], joint_vel_des[idx_torque_controlled_joints])
 
     momentum_controller.set_desired_center_of_mass_trajectory(p_com_des, v_com_des, acc_com_des)
     momentum_controller.set_desired_angular_momentum(H_des[3:])
 
-    momentum_controller_box.set_desired_center_of_mass_trajectory(p_box_com_des, np.zeros(3), np.zeros(3))
-    #momentum_controller_box.set_desired_angular_momentum(np.zeros(3))
-    momentum_controller_box.set_desired_angular_momentum(H_box[3:])
-
+    momentum_controller_box.set_desired_center_of_mass_trajectory(p_box_com_des, pd_box_com_des, np.zeros(3))
+    # momentum_controller_box.set_desired_angular_momentum(H_box_des[3:])
+    momentum_controller_box.set_desired_angular_momentum(np.zeros(3))
 
     if use_profiler : profiler.stop_timer(timer_name='StateMachine', now=time.time())
 
@@ -387,6 +378,7 @@ while True:
 
         [tau_sigma, tau_model] = wholebodycontrol.get_torques_projected_dynamics(tau_0_model, tau_0_sigma, Jc_ctrl, Jf_ctrl, Jdot_nu, M_ctrl, h_ctrl, B_ctrl)
 
+
         if use_profiler : profiler.stop_timer(timer_name='Controller', now=time.time())
 
         # solve QP optimization
@@ -397,10 +389,11 @@ while True:
             f = wrench_qp.solve(tau_model, tau_sigma, Aeq, beq, Adeq, bdeq, 0.001, "quadprog")
 
         if f is None:
-            print("Failed to solve the optimization")
+            print("Failed to solve the optimization, using previous value")
             break
 
         tau = tau_sigma @ f + tau_model
+
 
         if use_profiler : profiler.stop_timer(timer_name='QP', now=time.time())
 
@@ -433,6 +426,7 @@ while True:
                         'v_com'     : v_com, 'v_com_des'     :     v_com_des,
                         'p_box_com' : p_box_com, 'p_box_com_des' : p_box_com_des,
                         'ang_mom'   : H[3:], 'ang_mom_des'   :     H_des[3:],
+                        'ang_mom_box'   : H_box[3:], 'ang_mom_box_des'   :      H_box_des[3:],
                         'joint_pos' :     s, 'joint_pos_des' : joint_pos_des,
                         'tau' : tau}
         logger.append_data(logger_data)

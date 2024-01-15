@@ -21,6 +21,6 @@ joints_control_mode = {}
 controller_gains = {}
 controller_gains['momentum_task'] = {}
 
-controller_gains['momentum_task']['Ki'] = [50, 50, 200, 0, 0, 0]
-controller_gains['momentum_task']['Kp'] = [ 0,  0,   0, 0.025, 0.025, 0.025]
 
+controller_gains['momentum_task']['Ki'] = [50, 50, 200, 0, 0, 0]
+controller_gains['momentum_task']['Kp'] = [1.5, 1.5, 2, 0.025, 0.025, 0.025]
