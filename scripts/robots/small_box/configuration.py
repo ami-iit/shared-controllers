@@ -9,9 +9,18 @@ if box_urdf:
 else:
     print("Could not find the box model. Please set the environment variable SMALL_BOX_MODEL to the path of the box model.")
 
+
+joints_list = ['joint1',
+               'joint2']
+
+remote_control_board_list =  ["/" + robot_name + "/BoxControlBoard"]
+
+## Control Mode
+joints_control_mode = {}
 ## Gains
 controller_gains = {}
 controller_gains['momentum_task'] = {}
 
 controller_gains['momentum_task']['Ki'] = [50, 50, 200, 0, 0, 0]
 controller_gains['momentum_task']['Kp'] = [ 0,  0,   0, 0.025, 0.025, 0.025]
+

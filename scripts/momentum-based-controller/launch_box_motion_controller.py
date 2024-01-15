@@ -25,8 +25,8 @@ import robots.small_box.configuration as box_configuration
 # Flags
 use_visualizer = False
 use_logger = True
-use_profiler = True
-plot_data = False
+use_profiler = False
+plot_data = True
 save_figure = True
 
 # Hands wrenches
@@ -41,6 +41,8 @@ if consider_hands_wrenches:
 
 # Frequency
 controller_frequency = 0.003 # seconds
+hands_tracking_gain = 20
+
 
 
 # Joints selector
@@ -64,6 +66,7 @@ box_model = wholebodylib.robot(box_configuration.urdf_path, [], box_configuratio
 robot_interface = robotInterface.robotInterface(robot_configuration.robot_name, "/local", robot_configuration.joints_list, robot_configuration.remote_control_board_list)
 robot_interface.open()
 
+
 def termination():
     robot_interface.set_position_control_mode()
     robot_interface.robotDriver.close()
@@ -84,6 +87,7 @@ def termination():
         fig_com_vel = logger.plot_data('t', ['v_com', 'v_com_des'], 'CoM velocity tracking', show_plot=False)
         fig_ang_mom = logger.plot_data('t', ['ang_mom', 'ang_mom_des'], 'Angular Momentum tracking', show_plot=False)
 
+        fig_com_box = logger.plot_data('t', ['p_box_com', 'p_box_com_des'], 'Box CoM position tracking', show_plot=False)
 
     if save_figure:
         # Create directory to save figure
@@ -97,6 +101,9 @@ def termination():
             fig_com_vel.savefig('figure/com_velocity_tracking.png')
         if fig_ang_mom:
             fig_ang_mom.savefig('figure/angular_momentum_tracking.png')
+        if fig_com_box:
+            fig_com_box.savefig('figure/box_com_position_tracking.png')
+
 
     if plot_data:
         plt.show()
@@ -133,6 +140,8 @@ momentum_controller_box_gain.Ki = np.array(box_configuration.controller_gains['m
 momentum_controller_box_gain.Kp = np.array(box_configuration.controller_gains['momentum_task']['Kp'])
 momentum_controller_box.set_gain(momentum_controller_box_gain)
 momentum_controller_box.set_desired_center_of_mass_trajectory(np.zeros(3), np.zeros(3), np.zeros(3))
+momentum_controller_box.set_desired_angular_momentum(np.zeros(3))
+
 
 # initialize QP
 wrench_qp = wholebodycontrol.WrenchQP()
@@ -142,7 +151,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # initialize configurations
-configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["hands_70", "hands_90"], [1 ,40])
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "hands_120", "box_manipulation_1"], [1 ,40, 80])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
@@ -159,9 +168,9 @@ if use_visualizer:
 if use_logger:
 
     logger = loggerplotterlib.LoggerPlotter()
-    logger.add_data_variables(['t', 'p_com', 'p_com_des', 'v_com', 'v_com_des', 'ang_mom', 'ang_mom_des', 'joint_pos', 'joint_pos_des', 'tau'])
+    logger.add_data_variables(['t', 'p_com', 'p_com_des', 'v_com', 'v_com_des', 'ang_mom', 'ang_mom_des', 'p_box_com', 'p_box_com_des', 'joint_pos', 'joint_pos_des', 'tau'])
 
-# open port to read box pose
+# # open port to read box pose
 box_basestate_port = yarp.BufferedPortBottle()
 box_basestate_port.open("/box/base/state:i")
 
@@ -191,7 +200,7 @@ p_box_com_des = box_model.get_center_of_mass_position()
 p_box_com_des[2] = p_box_com_des[2] - 0.3
 
 
-# Extracting the next three elements into a separate vector
+#Extracting the next three elements into a separate vector
 box_velocity = [box_pose_bottle.get(i).asFloat64() for i in range(6, 12)]
 
 # reset clock
@@ -217,7 +226,7 @@ while True:
     if use_profiler : profiler.start_timer(timer_name='Loop', now=time.time())
     if use_profiler : profiler.start_timer(timer_name='LoopControl', now=time.time())
 
-    # get box pose
+    # # get box pose
     box_pose_bottle = box_basestate_port.read(False)
 
     if box_pose_bottle is not None:
@@ -242,6 +251,7 @@ while True:
     # tau_meas = robot_interface.get_joints_torque()
     base_pose = model.get_base_pose_from_contacts(s, {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)})
     w_b = model.get_base_velocity_from_contacts(base_pose, s, ds, ["l_sole", "r_sole"])
+
 
     if use_profiler : profiler.stop_timer(timer_name='DataReading', now=time.time())
 
@@ -291,6 +301,7 @@ while True:
 
     if use_profiler : profiler.stop_timer(timer_name='ComputeKinematics', now=time.time())
 
+
     # get desired configuration from state machine
     if use_profiler : profiler.start_timer(timer_name='StateMachine', now=time.time())
     if first_run:
@@ -308,6 +319,10 @@ while True:
     if not state_machine.update(time.time()):
         break
     joint_pos_des, joint_vel_des, joint_acc_des, _, _, _ = state_machine.get_state()
+    # print desired joints positions, ..etc
+    print("Desired joints positions: " + str(joint_pos_des))
+    print("Desired joints velocities: " + str(joint_vel_des))
+    print("Desired joints accelerations: " + str(joint_acc_des))
 
 
     # Get center of mass trajectory from forward kinematics
@@ -329,7 +344,9 @@ while True:
     momentum_controller.set_desired_angular_momentum(H_des[3:])
 
     momentum_controller_box.set_desired_center_of_mass_trajectory(p_box_com_des, np.zeros(3), np.zeros(3))
-    momentum_controller_box.set_desired_angular_momentum(np.zeros(3))
+    #momentum_controller_box.set_desired_angular_momentum(np.zeros(3))
+    momentum_controller_box.set_desired_angular_momentum(H_box[3:])
+
 
     if use_profiler : profiler.stop_timer(timer_name='StateMachine', now=time.time())
 
@@ -414,6 +431,7 @@ while True:
         logger_data = { 't' : t,
                         'p_com'     : p_com, 'p_com_des'     :     p_com_des,
                         'v_com'     : v_com, 'v_com_des'     :     v_com_des,
+                        'p_box_com' : p_box_com, 'p_box_com_des' : p_box_com_des,
                         'ang_mom'   : H[3:], 'ang_mom_des'   :     H_des[3:],
                         'joint_pos' :     s, 'joint_pos_des' : joint_pos_des,
                         'tau' : tau}
