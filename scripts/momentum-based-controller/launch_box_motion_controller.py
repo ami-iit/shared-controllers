@@ -279,6 +279,7 @@ while True:
     w_H_frames_box = box_model.get_frames_transform(["side1_contact_link", "side2_contact_link"])
     H_box = box_model.get_centroidal_momentum()
     p_box_com = box_model.get_center_of_mass_position()
+    H_box_des = H_box
 
     M = model.get_mass_matrix()
     h = model.get_generalized_bias_force()
@@ -309,6 +310,7 @@ while True:
         state_machine.add_configuration(configuration_0)
         configuration_1 = configurations[0]
         state_machine.add_configuration(configuration_1)
+        state_machine.add_configuration(configuration_1)
 
 
         first_run = False
@@ -334,10 +336,8 @@ while True:
 
     momentum_controller.set_desired_center_of_mass_trajectory(p_com_des, v_com_des, acc_com_des)
     momentum_controller.set_desired_angular_momentum(H_des[3:])
-
     momentum_controller_box.set_desired_center_of_mass_trajectory(p_box_com_des, pd_box_com_des, np.zeros(3))
-    # momentum_controller_box.set_desired_angular_momentum(H_box_des[3:])
-    momentum_controller_box.set_desired_angular_momentum(np.zeros(3))
+    momentum_controller_box.set_desired_angular_momentum(H_box_des[3:])
 
     if use_profiler : profiler.stop_timer(timer_name='StateMachine', now=time.time())
 
