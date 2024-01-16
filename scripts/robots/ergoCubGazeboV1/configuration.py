@@ -249,3 +249,30 @@ state_machine_configurations['box_manipulation_1']['joints_position'] = {
     }
 state_machine_configurations['box_manipulation_1']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
 
+## box manipulation configs
+state_machine_configurations['box_manipulation_2'] = {}
+state_machine_configurations['box_manipulation_2']['joints_position'] = {
+    'torso_pitch'      :  0.0       ,
+    'l_shoulder_pitch' :  -0.541052,
+    'l_shoulder_roll'  :  0.541052,
+    'l_shoulder_yaw'   :  -0.261799,
+    'l_elbow'          :  0.64664449,
+    'r_shoulder_pitch' :  0.541052,
+    'r_shoulder_roll'  :  0.191986,
+    'r_shoulder_yaw'   :  0.0,
+    'r_elbow'          :  0.64664449,
+    'l_hip_pitch'      :  0.0994838,
+    'l_hip_roll'       :  0.349066,
+    'l_hip_yaw'        :  0.3071779,
+    'l_knee'           :  -0.92415184,
+    'l_ankle_pitch'    :  -0.5602507,
+    'l_ankle_roll'     :  -0.0855211,
+    'r_hip_pitch'      :  0.0994838,
+    'r_hip_roll'       :  0.349066,
+    'r_hip_yaw'        :  0.3071779,
+    'r_knee'           :  -0.92415184,
+    'r_ankle_pitch'    :  -0.5602507,
+    'r_ankle_roll'     :  -0.0855211
+    }
+state_machine_configurations['box_manipulation_2']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
+

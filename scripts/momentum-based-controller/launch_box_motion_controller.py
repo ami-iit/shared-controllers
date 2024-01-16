@@ -40,7 +40,7 @@ if consider_hands_wrenches:
     f_r_hand_des = np.array([0, -squeeze_force, -9.81 * load /2, 0, 0, 0])
 
 # Frequency
-controller_frequency = 0.003 # seconds
+controller_frequency = 0.004 # seconds
 
 
 
@@ -153,7 +153,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # initialize configurations
-configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "hands_120"], [10 ,10])
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "box_manipulation_2"], [10 ,10])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
@@ -234,12 +234,20 @@ while True:
         box_pose_idyn.setRotation(iDynTree.Rotation().RPY(box_pose_vector[3], box_pose_vector[4], box_pose_vector[5]))
 
         box_pose = box_pose_idyn.asHomogeneousTransform().toNumPy()
+
         p_box_com_des  = box_pose_idyn.getPosition().toNumPy()
         r_box_com_des     = box_pose_idyn.getRotation().asRPY().toNumPy()
 
         pd_box_com_des = np.array(box_velocity_vector[:3])
         omega_box_com_des = np.array(box_velocity_vector[3:])
 
+    # make p_box_com_des a circle on the y-z plane
+    radius = 0.1
+    p_box_com_des[1] = radius * np.cos(time.time()) + p_box_com_des[1]
+    p_box_com_des[2] = radius * np.sin(time.time()) + p_box_com_des[2]
+
+    pd_box_com_des[1] = -radius * np.sin(time.time())
+    pd_box_com_des[2] =  radius * np.cos(time.time())
 
     # get kinematic state
     if use_profiler : profiler.start_timer(timer_name='DataReading', now=time.time())
@@ -305,18 +313,15 @@ while True:
     if first_run:
         joint_pos_des = np.copy(s)
         p_com_des = np.copy(p_com)
-        configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 5.0)
+        configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 10.0)
         state_machine.add_configuration(configuration_0)
-        # state_machine.add_configuration(configuration_0)
-        state_machine.add_configuration(configurations[0])
+        for configuration in configurations:
+            state_machine.add_configuration(configuration)
+
         state_machine.add_configuration(configuration_0)
-        state_machine.add_configuration(configurations[1])
-        # state_machine.add_configuration(configuration_0)
-        # state_machine.add_configuration(configurations[0])
 
         first_run = False
 
-    # print("Desired box position: " + str(p_box_com_des))
 
     if not state_machine.update(time.time()):
         break
