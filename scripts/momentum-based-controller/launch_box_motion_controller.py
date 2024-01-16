@@ -41,7 +41,6 @@ if consider_hands_wrenches:
 
 # Frequency
 controller_frequency = 0.003 # seconds
-hands_tracking_gain = 20
 
 
 
@@ -154,7 +153,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # initialize configurations
-configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "hands_120"], [20 ,40])
+configurations = configuration_handler.statemachine_configurations_generator(robot_configuration, model, ["box_manipulation_1", "hands_120"], [10 ,10])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
@@ -306,12 +305,14 @@ while True:
     if first_run:
         joint_pos_des = np.copy(s)
         p_com_des = np.copy(p_com)
-        configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 10.0)
+        configuration_0 = statemachine.Configuration(joint_pos_des, p_com_des, 5.0)
         state_machine.add_configuration(configuration_0)
-        configuration_1 = configurations[0]
-        state_machine.add_configuration(configuration_1)
-        state_machine.add_configuration(configuration_1)
-
+        # state_machine.add_configuration(configuration_0)
+        state_machine.add_configuration(configurations[0])
+        state_machine.add_configuration(configuration_0)
+        state_machine.add_configuration(configurations[1])
+        # state_machine.add_configuration(configuration_0)
+        # state_machine.add_configuration(configurations[0])
 
         first_run = False
 
@@ -364,15 +365,15 @@ while True:
 
         [Aeq, beq] = momentum_controller.get_momentum_control_tasks(H, p_com, w_H_frames)
         [Aeq_box, beq_box] = momentum_controller_box.get_momentum_control_tasks(H_box, p_box_com, w_H_frames_box)
-
         # hands wrench task
         if consider_hands_wrenches:
             Aeq_hand = np.eye(6)
             beq_hand = np.zeros(6)
             Aeq_aug = np.block([[Aeq],
-                                [np.zeros([6,12]),  Aeq_box]])
+                               [np.zeros([6, 12]), Aeq_box[:, 6:], np.zeros([6, 6])],
+                               [np.zeros([6, 12]), np.zeros([6, 6]), Aeq_box[:, :6]]])
 
-            beq_aug = np.concatenate((beq, beq_box))
+            beq_aug = np.concatenate((beq, beq_box, beq_box))
 
             Adeq_aug = np.block([Adeq,  np.zeros([Adeq.shape[0], 12])])
 
