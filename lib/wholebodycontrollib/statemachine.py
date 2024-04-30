@@ -1,5 +1,4 @@
 import numpy as np
-import yarp
 
 class Configuration():
 
@@ -10,35 +9,16 @@ class Configuration():
 
 class StateMachine():
 
-    def __init__(self, repeat = False):
+    def __init__(self, repeat = False, set_emotion = False):
         self.configurations = []
         self.time = 0
         self.state_start_time = -1
         self.current_state = 0
         self.repeat = repeat
         self.phi = 0.0
-
-        # rpc for face expression
-        yarp.Network.init()
-
-        rpc_client_name = '/ergoCubEmotions/rpcClient'
-        rpc_server_name = '/ergoCubEmotions/rpc'
-
-        self.rpc_command = yarp.Bottle()
-        self.rpc_command.addString('setEmotion')
-        self.rpc_response = yarp.Bottle()
-
-        self.rpc_client = yarp.RpcClient()
-        self.rpc_client.open(rpc_client_name)
-
-        yarp.Network.connect(rpc_client_name, rpc_server_name)
-
-        # Initialize face expression to angry
-        self.happy = False
-        self.rpc_command.addString('shy')
-        self.rpc_client.write(self.rpc_command, self.rpc_response)
-        self.rpc_command.pop()
-        
+        self.set_emotion = set_emotion
+        if self.set_emotion: from wholebodycontrollib.facialexpression import FacialExpression
+        if self.set_emotion: self.facial_expression = FacialExpression()
     
     def add_configuration(self, configuration : Configuration):
         self.configurations.append(configuration)
@@ -95,19 +75,8 @@ class StateMachine():
                     tracking_gain =  tracking_gain * ((ref - 0.7)/0.1)
                 if ref<0.7:
                     tracking_gain = 0
-
-                if self.happy:
-                    self.rpc_command.addString('shy')
-                    self.rpc_client.write(self.rpc_command, self.rpc_response)
-                    self.rpc_command.pop()
-                    self.happy = False
-            else:
-                if not self.happy:
-                    self.rpc_command.addString('happy')
-                    self.rpc_client.write(self.rpc_command, self.rpc_response)
-                    self.rpc_command.pop()
-                    self.happy = True
-
+                
+            if self.set_emotion: self.facial_expression.update_face(ref=ref)
 
             phi_dot =  -tracking_gain * (pos - ref )
 

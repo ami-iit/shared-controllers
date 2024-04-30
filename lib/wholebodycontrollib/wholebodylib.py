@@ -1,7 +1,8 @@
 import numpy as np
 import idyntree.bindings as iDynTree
-
+import copy 
 from enum import Enum
+from typing import Union
 # from adam.casadi.computations import KinDynComputations
 
 class TransformFormat(Enum):
@@ -12,21 +13,28 @@ class TransformFormat(Enum):
 
 class robot():
 
-    def __init__(self, urdf_path, joints_list, base_link):
+    def __init__(self, urdf_path, joints_list, base_link, kinDyn:Union [iDynTree.KinDynComputations, None]=None):
 
-        self.joints_list = joints_list
-        self.base_link = base_link
-        self.urdf_path = urdf_path
-        self.ndof = len(joints_list)
+        if kinDyn is None:
+            self.joints_list = joints_list
+            self.base_link = base_link
+            self.urdf_path = urdf_path
+            self.ndof = len(joints_list)
 
-        # Load Model and Initialize KinDyn
-        self.kindyn = iDynTree.KinDynComputations()
-        mdlLoader = iDynTree.ModelLoader()
-        mdlLoader.loadReducedModelFromFile(urdf_path, joints_list)
-        if not self.kindyn.loadRobotModel(mdlLoader.model()):
-            raise ValueError('Failed to load the robot model in iDynTree.')
+            # Load Model and Initialize KinDyn
+            self.kindyn = iDynTree.KinDynComputations()
+            mdlLoader = iDynTree.ModelLoader()
+            mdlLoader.loadReducedModelFromFile(urdf_path, joints_list)
+            if not self.kindyn.loadRobotModel(mdlLoader.model()):
+                raise ValueError('Failed to load the robot model in iDynTree.')
+            self.initialize_buffer_variables()
+        else: 
+            self.kindyn = kindyn
+            self.ndof = kindyn.getNrOfDegreesOfFreedom()
+            self.initialize_buffer_variables()
 
-        # Initialize buffer variables
+
+    def initialize_buffer_variables(self): 
         self.s = iDynTree.VectorDynSize(self.ndof)
         self.ds = iDynTree.VectorDynSize(self.ndof)
         self.H_b = iDynTree.Transform()
