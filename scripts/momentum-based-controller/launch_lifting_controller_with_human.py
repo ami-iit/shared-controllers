@@ -15,11 +15,16 @@ from wholebodycontrollib import statemachine
 from wholebodycontrollib import loggerplotterlib
 
 sys.path.append('..')
-import robots.ergoCubGazeboV1.configuration as robot_configuration
+import robots.ergoCubSN000.configuration as robot_configuration
 import robots.human.configuration as human_configuration
 from utils import configuration_hadler
 
 
+
+
+for i in range(5): 
+    print("wating ...", i)
+    time.sleep(1)
 # Flags
 use_visualizer = False
 use_logger = True
@@ -30,13 +35,13 @@ save_figure = False
 # Add hands wrenches
 consider_hands_wrenches = True
 if consider_hands_wrenches:
-    load = 2
+    load = 0.1
     f_l_hand_des = np.array([0,  35, -9.81 * load /2 , 0, 0, 0])
     f_r_hand_des = np.array([0, -35, -9.81 * load /2, 0, 0, 0])
 
 # Frequency
 controller_frequency = 0.003 # seconds
-hands_tracking_gain = 20
+hands_tracking_gain = 20/2
 
 
 # Joints selector

@@ -83,30 +83,30 @@ class StateMachine():
 
         if self.current_state==2 and use_parametrized:
 
-            # ref = ref + (self.pos_offset)
-            ref = ref + self.compute_offset(ref)
-            # print('ref ' + str(ref))
-            # print('pos ',str(pos))
+            ref = ref + (self.pos_offset)
+            # ref = ref + self.compute_offset(ref)
+            print('ref ' + str(ref))
+            print('pos ',str(pos))
 
-            if ref < 0.8:
-                if ref > pos:
-                    tracking_gain  = tracking_gain
-                if ref < pos and ref>0.7:
-                    tracking_gain =  tracking_gain * ((ref - 0.7)/0.1)
-                if ref<0.7:
-                    tracking_gain = 0
+            # if ref < 0.8:
+            #     if ref > pos:
+            #         tracking_gain  = tracking_gain
+            #     if ref < pos and ref>0.7:
+            #         tracking_gain =  tracking_gain * ((ref - 0.7)/0.1)
+            #     if ref<0.7:
+            #         tracking_gain = 0
 
-                if self.happy:
-                    self.rpc_command.addString('shy')
-                    self.rpc_client.write(self.rpc_command, self.rpc_response)
-                    self.rpc_command.pop()
-                    self.happy = False
-            else:
-                if not self.happy:
-                    self.rpc_command.addString('happy')
-                    self.rpc_client.write(self.rpc_command, self.rpc_response)
-                    self.rpc_command.pop()
-                    self.happy = True
+            #     if self.happy:
+            #         self.rpc_command.addString('shy')
+            #         self.rpc_client.write(self.rpc_command, self.rpc_response)
+            #         self.rpc_command.pop()
+            #         self.happy = False
+            # else:
+            #     if not self.happy:
+            #         self.rpc_command.addString('happy')
+            #         self.rpc_client.write(self.rpc_command, self.rpc_response)
+            #         self.rpc_command.pop()
+            #         self.happy = True
 
 
             phi_dot =  -tracking_gain * (pos - ref )
