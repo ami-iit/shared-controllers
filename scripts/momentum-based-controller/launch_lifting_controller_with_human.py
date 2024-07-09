@@ -17,6 +17,7 @@ from wholebodycontrollib import loggerplotterlib
 sys.path.append('..')
 import robots.ergoCubSN000.configuration as robot_configuration
 import robots.human.configuration as human_configuration
+import bipedal_locomotion_framework as blf 
 from utils import configuration_hadler
 
 
@@ -67,6 +68,26 @@ robot_interface.open()
 
 human_robot_interface = robotInterface.robotInterface(human_configuration.robot_name, "/local", human_configuration.joints_list, human_configuration.remote_control_board_list)
 human_robot_interface.open()
+
+## Define yarp logger device 
+logger_option = blf.parameters_handler.StdParametersHandler()
+logger_option.set_parameter_string("remote", "/payload/log")
+vectors_collection_server = blf.yarp_utilities.VectorsCollectionServer() # Logger server.
+
+if not vectors_collection_server.initialize(logger_option):
+    blf.log().error("[PayloadController::configure] Unable to configure the server.")
+    raise RuntimeError("Unable to configure the server.")
+
+# populate the metadata
+vectors_collection_server.populate_metadata("paylod::com::measured", ["x", "y","z"])
+vectors_collection_server.populate_metadata("paylod::com::desired", ["x", "y", "z"])
+vectors_collection_server.populate_metadata("payload::torque::measured", robot_configuration.joints_list)
+vectors_collection_server.populate_metadata("payload::torque::desired", robot_configuration.joints_list)
+vectors_collection_server.populate_metadata("payload:ref::measured", "ref")
+vectors_collection_server.populate_metadata("payload:ref::desired", "pos")
+vectors_collection_server.populate_metadata("payload:phi", "phi_dot")
+vectors_collection_server.finalize_metadata() # this should be called only once when the metadata are ready
+
 
 def termination():
     robot_interface.set_position_control_mode()
@@ -188,7 +209,7 @@ while True:
 
     s = robot_interface.get_joints_position()
     ds = robot_interface.get_joints_velocity()
-    # tau_meas = robot_interface.get_joints_torque()
+    tau_meas = robot_interface.get_joints_torque()
     base_pose = model.get_base_pose_from_contacts(s, {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)})
     w_b = model.get_base_velocity_from_contacts(base_pose, s, ds, ["l_sole", "r_sole"])
 
@@ -274,7 +295,7 @@ while True:
     if not state_machine.update(time.time()):
         break
 
-    joint_pos_des, joint_vel_des, joint_acc_des, _, _, _ = state_machine.get_state(True, human_w_H_frames[10,3], w_H_r_hand[2,3], J_r_hand, controller_frequency, hands_tracking_gain)
+    joint_pos_des, joint_vel_des, joint_acc_des, _, _, _,ref, pos, phi_dot = state_machine.get_state(True, human_w_H_frames[10,3], w_H_r_hand[2,3], J_r_hand, controller_frequency, hands_tracking_gain)
 
 
     # Get center of mass trajectory from forward kinematics
@@ -408,7 +429,23 @@ while True:
     t = t+dt
     # print(dt)
     time_prev = time.time()
+    vectors_collection_server.prepare_data() # required to prepare the data to be sent
+    vectors_collection_server.clear_data() # optional see the documentation
+    vectors_collection_server.populate_data("paylod::com::measured",p_com)
+    vectors_collection_server.populate_data("paylod::com::desired", p_com_des)
+    vectors_collection_server.populate_data("payload::torque::measured", tau_meas)
+    vectors_collection_server.populate_data("payload::torque::desired", tau)
+    vectors_collection_server.populate_data("payload:ref::measured", ref)
+    vectors_collection_server.populate_data("payload:ref::desired", pos)
+    vectors_collection_server.populate_data("payload:phi_dot", phi_dot)
+    vectors_collection_server.send_data()
 
 
 termination()
+
+
+
+
+
+
 

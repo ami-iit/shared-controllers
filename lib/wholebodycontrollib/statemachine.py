@@ -136,7 +136,7 @@ class StateMachine():
             com_velocity = (com_position_final - com_position_initial) * (30.0 * (tau)**2 - 60.0 * (tau)**3 + 30.0 * (tau)**4)
             com_acceleration = (com_position_final - com_position_initial) * (60.0 * (tau) - 180.0 * (tau)**2 + 120.0 * (tau)**3)
 
-        return joint_position, joint_velocity, joint_acceleration, com_position, com_velocity, com_acceleration
+        return joint_position, joint_velocity, joint_acceleration, com_position, com_velocity, com_acceleration, ref, pos, phi_dot
 
 
 
