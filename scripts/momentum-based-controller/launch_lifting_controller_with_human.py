@@ -83,9 +83,9 @@ vectors_collection_server.populate_metadata("paylod::com::measured", ["x", "y","
 vectors_collection_server.populate_metadata("paylod::com::desired", ["x", "y", "z"])
 vectors_collection_server.populate_metadata("payload::torque::measured", robot_configuration.joints_list)
 vectors_collection_server.populate_metadata("payload::torque::desired", robot_configuration.joints_list)
-vectors_collection_server.populate_metadata("payload:ref::measured", "ref")
-vectors_collection_server.populate_metadata("payload:ref::desired", "pos")
-vectors_collection_server.populate_metadata("payload:phi", "phi_dot")
+vectors_collection_server.populate_metadata("payload:ref::measured", ["ref"])
+vectors_collection_server.populate_metadata("payload:ref::desired", ["pos"])
+vectors_collection_server.populate_metadata("payload:phi", ["phi_dot"])
 vectors_collection_server.finalize_metadata() # this should be called only once when the metadata are ready
 
 
