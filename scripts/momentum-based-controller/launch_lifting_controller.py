@@ -130,7 +130,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # Lifting configurations
-configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["hands_60", "hands_80"], [1 ,40])
+configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["initial_configuration","hands_100", "initial_configuration"], [10 ,10,10])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
