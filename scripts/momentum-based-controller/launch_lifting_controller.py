@@ -17,7 +17,7 @@ from wholebodycontrollib import loggerplotterlib
 from utils import configuration_hadler
 
 sys.path.append('..')
-import robots.ergoCubGazeboV1.configuration as robot_configuration
+import robots.ergoCubSN000.configuration as robot_configuration
 
 # Flags
 use_visualizer = False
@@ -130,7 +130,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # Lifting configurations
-configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["hands_40", "hands_70", "hands_80"], [5 ,5, 5])
+configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["hands_60", "hands_80"], [1 ,40])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
