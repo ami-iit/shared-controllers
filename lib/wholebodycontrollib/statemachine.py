@@ -64,7 +64,7 @@ class StateMachine():
         return True
 
     def get_state(self, use_parametrized=False, ref=0, pos=0, J=0, period=0.001, tracking_gain=0.1):
-
+        phi_dot = 0 
         time_since_start = self.time - self.state_start_time
 
         tau = time_since_start / self.configurations[self.current_state].duration
@@ -77,9 +77,10 @@ class StateMachine():
 
         com_position_initial = self.configurations[self.current_state - 1].com_position
         com_position_final = self.configurations[self.current_state].com_position
-
+        
         if self.current_state==1 and use_parametrized:
             self.pos_offset = pos - ref
+            
 
         if self.current_state==2 and use_parametrized:
 
@@ -136,7 +137,7 @@ class StateMachine():
             com_velocity = (com_position_final - com_position_initial) * (30.0 * (tau)**2 - 60.0 * (tau)**3 + 30.0 * (tau)**4)
             com_acceleration = (com_position_final - com_position_initial) * (60.0 * (tau) - 180.0 * (tau)**2 + 120.0 * (tau)**3)
 
-        return joint_position, joint_velocity, joint_acceleration, com_position, com_velocity, com_acceleration
+        return joint_position, joint_velocity, joint_acceleration, com_position, com_velocity, com_acceleration,ref, pos, phi_dot
 
 
 

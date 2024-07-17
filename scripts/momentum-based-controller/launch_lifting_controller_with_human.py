@@ -83,9 +83,9 @@ vectors_collection_server.populate_metadata("paylod::com::measured", ["x", "y","
 vectors_collection_server.populate_metadata("paylod::com::desired", ["x", "y", "z"])
 vectors_collection_server.populate_metadata("payload::torque::measured", robot_configuration.joints_list)
 vectors_collection_server.populate_metadata("payload::torque::desired", robot_configuration.joints_list)
-vectors_collection_server.populate_metadata("payload:ref::measured", "ref")
-vectors_collection_server.populate_metadata("payload:ref::desired", "pos")
-vectors_collection_server.populate_metadata("payload:phi", "phi_dot")
+vectors_collection_server.populate_metadata("payload::ref::measured", ["ref"])
+vectors_collection_server.populate_metadata("payload::ref::desired", ["pos"])
+vectors_collection_server.populate_metadata("payload::phi_dot", ["phi_dot"])
 vectors_collection_server.finalize_metadata() # this should be called only once when the metadata are ready
 
 
@@ -160,7 +160,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # Lifting configurations
-configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["hands_40", "hands_70"], [1 ,40])
+configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["initial_configuration","hands_100"], [1 ,40])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
@@ -435,9 +435,9 @@ while True:
     vectors_collection_server.populate_data("paylod::com::desired", p_com_des)
     vectors_collection_server.populate_data("payload::torque::measured", tau_meas)
     vectors_collection_server.populate_data("payload::torque::desired", tau)
-    vectors_collection_server.populate_data("payload:ref::measured", ref)
-    vectors_collection_server.populate_data("payload:ref::desired", pos)
-    vectors_collection_server.populate_data("payload:phi_dot", phi_dot)
+    vectors_collection_server.populate_data("payload::ref::measured", [ref])
+    vectors_collection_server.populate_data("payload::ref::desired", [pos])
+    vectors_collection_server.populate_data("payload::phi_dot", [phi_dot])
     vectors_collection_server.send_data()
 
 
