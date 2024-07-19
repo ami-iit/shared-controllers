@@ -48,8 +48,8 @@ controller_gains = {}
 controller_gains['postural_task'] = {}
 controller_gains['momentum_task'] = {}
 
-controller_gains['momentum_task']['Ki'] = [50, 50, 200, 0, 0, 0]
-controller_gains['momentum_task']['Kp'] = [ 1.5, 1.5, 2,  0.025, 0.025, 0.025]
+controller_gains['momentum_task']['Ki'] = [0.0*50, 0.0*50, 200, 0, 0, 0]
+controller_gains['momentum_task']['Kp'] = [ 0.0*1.5, 0.0*1.5, 2,  0.025, 0.025, 0.025]
 
 controller_gains['postural_task']['Kp'] = {
     'torso_pitch'      : 1.5*0.0,
