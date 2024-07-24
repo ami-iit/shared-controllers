@@ -308,18 +308,18 @@ state_machine_configurations['hands_100']['joints_position'] = {
     'r_shoulder_roll': 0.31904246,
     'r_shoulder_yaw': -0.26993959,
     'r_elbow': 0.44360368,
-'l_hip_pitch' : 0.25479256152244334,
-'l_hip_roll' : 0.03672702367638624,
-'l_hip_yaw' : -0.005588860561231716,
-'l_knee' : -0.3000030972191293,
-'l_ankle_pitch' : -0.1489140270381754,
-'l_ankle_roll' : -0.03714938495742498,
-'r_hip_pitch' : 0.2547925615222638,
-'r_hip_roll' : 0.03673014164682717,
-'r_hip_yaw' : -0.005600019603378294,
-'r_knee' : -0.2999999900681039,
-'r_ankle_pitch' : -0.1489113299337882,
-'r_ankle_roll' : -0.03715465179389699,
+    'l_hip_pitch' : 0.25479256152244334,
+    'l_hip_roll' : 0.03672702367638624,
+    'l_hip_yaw' : -0.005588860561231716,
+    'l_knee' : -0.3000030972191293,
+    'l_ankle_pitch' : -0.1489140270381754,
+    'l_ankle_roll' : -0.03714938495742498,
+    'r_hip_pitch' : 0.2547925615222638,
+    'r_hip_roll' : 0.03673014164682717,
+    'r_hip_yaw' : -0.005600019603378294,
+    'r_knee' : -0.2999999900681039,
+    'r_ankle_pitch' : -0.1489113299337882,
+    'r_ankle_roll' : -0.03715465179389699,
 }
 state_machine_configurations['hands_100']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
 
@@ -430,3 +430,31 @@ state_machine_configurations['hands_120']['joints_position'] = {
     }
 state_machine_configurations['hands_120']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
 
+
+
+## Hands 100cm
+state_machine_configurations['hands_final'] = {}
+state_machine_configurations['hands_final']['joints_position'] = {
+    'torso_pitch'      :  0.0       ,
+    'l_shoulder_pitch': -1.5,
+    'l_shoulder_roll': 0.31904745,
+    'l_shoulder_yaw': -0.26993846,
+    'l_elbow': 0.44355412,
+    'r_shoulder_pitch': -1.5,
+    'r_shoulder_roll': 0.31904246,
+    'r_shoulder_yaw': -0.26993959,
+    'r_elbow': 0.44360368,
+    'l_hip_pitch' : 0.25479256152244334,
+    'l_hip_roll' : 0.03672702367638624,
+    'l_hip_yaw' : -0.005588860561231716,
+    'l_knee' : -0.3000030972191293,
+    'l_ankle_pitch' : -0.1489140270381754,
+    'l_ankle_roll' : -0.03714938495742498,
+    'r_hip_pitch' : 0.2547925615222638,
+    'r_hip_roll' : 0.03673014164682717,
+    'r_hip_yaw' : -0.005600019603378294,
+    'r_knee' : -0.2999999900681039,
+    'r_ankle_pitch' : -0.1489113299337882,
+    'r_ankle_roll' : -0.03715465179389699,
+}
+state_machine_configurations['hands_final']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}

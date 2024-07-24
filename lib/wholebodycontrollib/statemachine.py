@@ -63,7 +63,7 @@ class StateMachine():
         
         return True
 
-    def get_state(self, use_parametrized=False, ref=0, pos=0, J=0, period=0.001, tracking_gain=0.1):
+    def get_state(self, use_parametrized=False, ref=0, pos=0, J=0, period=0.001, tracking_gain=0.01):
         phi_dot = 0 
         time_since_start = self.time - self.state_start_time
 
@@ -119,6 +119,12 @@ class StateMachine():
                 self.phi = 1.0
             elif self.phi <0.0:
                 self.phi = 0.0
+
+            if phi_dot > 0.2:
+                phi_dot = 0.2
+            elif phi_dot<-0.2:
+                phi_dot = -0.2
+
 
             joint_position = joint_position_initial + (joint_position_final - joint_position_initial) * self.phi
             joint_velocity = phi_dot * (joint_position_final - joint_position_initial)

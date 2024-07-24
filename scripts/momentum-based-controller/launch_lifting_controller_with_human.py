@@ -42,7 +42,7 @@ if consider_hands_wrenches:
 
 # Frequency
 controller_frequency = 0.003 # seconds
-hands_tracking_gain = 20/2
+hands_tracking_gain = 20/4#20/2
 
 
 # Joints selector
@@ -160,7 +160,7 @@ wrench_qp = wholebodycontrol.WrenchQP()
 state_machine = statemachine.StateMachine(repeat=False)
 
 # Lifting configurations
-configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["initial_configuration","hands_100"], [1 ,40])
+configurations = configuration_hadler.statemachine_configurations_generator(robot_configuration, model, ["initial_configuration","hands_final"], [1 ,40])
 
 # Create selector matrix for the controlled joints
 B_ctrl =  np.block([[np.zeros([6, len(idx_torque_controlled_joints)])], [np.eye(len(idx_torque_controlled_joints))]])
