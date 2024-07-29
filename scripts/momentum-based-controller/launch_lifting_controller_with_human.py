@@ -36,13 +36,13 @@ save_figure = False
 # Add hands wrenches
 consider_hands_wrenches = True
 if consider_hands_wrenches:
-    load = 0.1
+    load = 0.1 #1.5
     f_l_hand_des = np.array([0,  35, -9.81 * load /2 , 0, 0, 0])
     f_r_hand_des = np.array([0, -35, -9.81 * load /2, 0, 0, 0])
 
 # Frequency
 controller_frequency = 0.003 # seconds
-hands_tracking_gain = 20/4#20/2
+hands_tracking_gain =  6.2 #20/3#20/2
 
 
 # Joints selector
