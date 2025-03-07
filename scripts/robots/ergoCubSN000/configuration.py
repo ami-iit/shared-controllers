@@ -24,11 +24,11 @@ joints_control_mode = {
     'l_shoulder_pitch' : 'torque', 
     'l_shoulder_roll'  : 'torque', 
     'l_shoulder_yaw'   : 'torque', 
-    'l_elbow'          : 'positionDirect',
+    'l_elbow'          : 'torque',
     'r_shoulder_pitch' : 'torque', 
     'r_shoulder_roll'  : 'torque', 
     'r_shoulder_yaw'   : 'torque', 
-    'r_elbow'          : 'positionDirect', 
+    'r_elbow'          : 'torque', 
     'l_hip_pitch'      : 'torque', 
     'l_hip_roll'       : 'torque', 
     'l_hip_yaw'        : 'torque', 
@@ -48,8 +48,11 @@ controller_gains = {}
 controller_gains['postural_task'] = {}
 controller_gains['momentum_task'] = {}
 
-controller_gains['momentum_task']['Ki'] = [50, 50, 200, 0, 0, 0]
-controller_gains['momentum_task']['Kp'] = [ 0,  0,   0, 0.025, 0.025, 0.025]
+controller_gains['momentum_task']['Ki'] = [0.0*50, 0.0*50, 200, 0, 0, 0]
+controller_gains['momentum_task']['Kp'] = [ 0.0*1.5, 0.0*1.5, 2,  0.025, 0.025, 0.025]
+
+# controller_gains['momentum_task']['Ki'] = [0.0*50, 50, 200, 0, 0, 0]
+# controller_gains['momentum_task']['Kp'] = [ 1.5, 1.5, 2,  0.025, 0.025, 0.025]
 
 controller_gains['postural_task']['Kp'] = {
     'torso_pitch'      : 1.5*0.0,
@@ -109,6 +112,34 @@ state_machine_configurations['hands_35']['joints_position'] = {
     'r_ankle_roll'     : -0.04536506
     } 
 state_machine_configurations['hands_35']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
+
+## Initial Configuration 40cm
+state_machine_configurations['initial_configuration'] = {}
+state_machine_configurations['initial_configuration']['joints_position'] = {
+    'torso_pitch'      :  0.0       ,
+    'l_shoulder_pitch': -1.22247618,
+    'l_shoulder_roll': 0.31904745,
+    'l_shoulder_yaw': -0.26993846,
+    'l_elbow': 0.44355412,
+    'r_shoulder_pitch': -1.22236032,
+    'r_shoulder_roll': 0.31904246,
+    'r_shoulder_yaw': -0.26993959,
+    'r_elbow': 0.44360368,
+    'l_hip_pitch': 1.01243659,
+    'l_hip_roll': 0.03324466,
+    'l_hip_yaw': -0.02649463,
+    'l_knee': -0.60438973,
+    'l_ankle_pitch': -0.0368456,
+    'l_ankle_roll': -0.04232412,
+    'r_hip_pitch': 1.01250649,
+    'r_hip_roll': 0.03330953,
+    'r_hip_yaw': -0.02642762,
+    'r_knee': -0.60434935,
+    'r_ankle_pitch': -0.0367432,
+    'r_ankle_roll': -0.04223599
+    }
+state_machine_configurations['initial_configuration']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
+
 
 ## Hands 40cm
 state_machine_configurations['hands_40'] = {}
@@ -268,32 +299,86 @@ state_machine_configurations['hands_90']['joints_position'] = {
 'r_ankle_roll' : -0.03676349504686381,
 }
 state_machine_configurations['hands_90']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
-
 ## Hands 100cm
 state_machine_configurations['hands_100'] = {}
 state_machine_configurations['hands_100']['joints_position'] = {
-'l_shoulder_pitch' : -0.565856047796371,
-'l_shoulder_roll' : 0.15,
-'l_shoulder_yaw' : -0.27639761159984146,
-'l_elbow' : 0.9999999903091813,
-'r_shoulder_pitch' : -0.5658560477966292,
-'r_shoulder_roll' : 0.15,
-'r_shoulder_yaw' : -0.27639761159987694,
-'r_elbow' : 0.9999999903091077,
-'l_hip_pitch' : 0.25479256152244334,
-'l_hip_roll' : 0.03672702367638624,
-'l_hip_yaw' : -0.005588860561231716,
-'l_knee' : -0.3000030972191293,
-'l_ankle_pitch' : -0.1489140270381754,
-'l_ankle_roll' : -0.03714938495742498,
-'r_hip_pitch' : 0.2547925615222638,
-'r_hip_roll' : 0.03673014164682717,
-'r_hip_yaw' : -0.005600019603378294,
-'r_knee' : -0.2999999900681039,
-'r_ankle_pitch' : -0.1489113299337882,
-'r_ankle_roll' : -0.03715465179389699,
+    'torso_pitch'      :  0.0       ,
+    'l_shoulder_pitch': -1.22247618,
+    'l_shoulder_roll': 0.31904745,
+    'l_shoulder_yaw': -0.26993846,
+    'l_elbow': 0.44355412,
+    'r_shoulder_pitch': -1.22236032,
+    'r_shoulder_roll': 0.31904246,
+    'r_shoulder_yaw': -0.26993959,
+    'r_elbow': 0.44360368,
+    'l_hip_pitch' : 0.25479256152244334,
+    'l_hip_roll' : 0.03672702367638624,
+    'l_hip_yaw' : -0.005588860561231716,
+    'l_knee' : -0.3000030972191293,
+    'l_ankle_pitch' : -0.1489140270381754,
+    'l_ankle_roll' : -0.03714938495742498,
+    'r_hip_pitch' : 0.2547925615222638,
+    'r_hip_roll' : 0.03673014164682717,
+    'r_hip_yaw' : -0.005600019603378294,
+    'r_knee' : -0.2999999900681039,
+    'r_ankle_pitch' : -0.1489113299337882,
+    'r_ankle_roll' : -0.03715465179389699,
 }
 state_machine_configurations['hands_100']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
+
+## Initial Configuration 40cm
+state_machine_configurations['initial_configuration'] = {}
+state_machine_configurations['initial_configuration']['joints_position'] = {
+    'torso_pitch'      :  0.0       ,
+    'l_shoulder_pitch': -1.22247618,
+    'l_shoulder_roll': 0.31904745,
+    'l_shoulder_yaw': -0.26993846,
+    'l_elbow': 0.44355412,
+    'r_shoulder_pitch': -1.22247618,
+    'r_shoulder_roll': 0.31904745,
+    'r_shoulder_yaw': -0.26993846,
+    'r_elbow': 0.44355412,
+    'l_hip_pitch': 1.01243659,
+    'l_hip_roll': 0.03324466,
+    'l_hip_yaw': -0.02649463,
+    'l_knee': -0.60434935,
+    'l_ankle_pitch': -0.0368456,
+    'l_ankle_roll': -0.04232412,
+    'r_hip_pitch': 1.01243659,
+    'r_hip_roll':  0.03324466,
+    'r_hip_yaw': -0.02649463,
+    'r_knee': -0.60434935,
+    'r_ankle_pitch': -0.0368456,
+    'r_ankle_roll': -0.04232412
+    }
+state_machine_configurations['initial_configuration']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
+
+
+# ## Hands 100cm
+# state_machine_configurations['hands_100'] = {}
+# state_machine_configurations['hands_100']['joints_position'] = {
+# 'l_shoulder_pitch' : -0.565856047796371,
+# 'l_shoulder_roll' : 0.1,
+# 'l_shoulder_yaw' : -0.27639761159984146,
+# 'l_elbow' : 0.9999999903091813,
+# 'r_shoulder_pitch' : -0.5658560477966292,
+# 'r_shoulder_roll' : 0.15,
+# 'r_shoulder_yaw' : -0.27639761159987694,
+# 'r_elbow' : 0.9999999903091077,
+# 'l_hip_pitch' : 0.25479256152244334,
+# 'l_hip_roll' : 0.03672702367638624,
+# 'l_hip_yaw' : -0.005588860561231716,
+# 'l_knee' : -0.3000030972191293,
+# 'l_ankle_pitch' : -0.1489140270381754,
+# 'l_ankle_roll' : -0.03714938495742498,
+# 'r_hip_pitch' : 0.2547925615222638,
+# 'r_hip_roll' : 0.03673014164682717,
+# 'r_hip_yaw' : -0.005600019603378294,
+# 'r_knee' : -0.2999999900681039,
+# 'r_ankle_pitch' : -0.1489113299337882,
+# 'r_ankle_roll' : -0.03715465179389699,
+# }
+# state_machine_configurations['hands_100']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
 
 ## Hands 110cm
 state_machine_configurations['hands_110'] = {}
@@ -348,3 +433,31 @@ state_machine_configurations['hands_120']['joints_position'] = {
     }
 state_machine_configurations['hands_120']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}
 
+
+
+## Hands 100cm
+state_machine_configurations['hands_final'] = {}
+state_machine_configurations['hands_final']['joints_position'] = {
+    'torso_pitch'      :  0.0       ,
+    'l_shoulder_pitch': -1.5,
+    'l_shoulder_roll': 0.31904745,
+    'l_shoulder_yaw': -0.26993846,
+    'l_elbow': 0.44355412,
+    'r_shoulder_pitch': -1.5,
+    'r_shoulder_roll': 0.31904745,
+    'r_shoulder_yaw': -0.26993846,
+    'r_elbow': 0.44355412,
+    'l_hip_pitch' : 0.25479256152244334,
+    'l_hip_roll' : 0.03672702367638624,
+    'l_hip_yaw' : -0.005588860561231716,
+    'l_knee' : -0.3000030972191293,
+    'l_ankle_pitch' : -0.1489140270381754,
+    'l_ankle_roll' : -0.03714938495742498,
+    'r_hip_pitch' : 0.25479256152244334,
+    'r_hip_roll' : 0.03672702367638624,
+    'r_hip_yaw' : -0.005588860561231716,
+    'r_knee' : -0.3000030972191293,
+    'r_ankle_pitch' : -0.1489140270381754,
+    'r_ankle_roll' : -0.03714938495742498,
+}
+state_machine_configurations['hands_final']['contacts'] = {'l_sole' : np.eye(4), 'r_sole' : np.eye(4)}

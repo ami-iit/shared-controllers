@@ -63,8 +63,8 @@ class StateMachine():
         
         return True
 
-    def get_state(self, use_parametrized=False, ref=0, pos=0, J=0, period=0.001, tracking_gain=0.1):
-
+    def get_state(self, use_parametrized=False, ref=0, pos=0, J=0, period=0.001, tracking_gain=0.01):
+        phi_dot = 0 
         time_since_start = self.time - self.state_start_time
 
         tau = time_since_start / self.configurations[self.current_state].duration
@@ -77,36 +77,37 @@ class StateMachine():
 
         com_position_initial = self.configurations[self.current_state - 1].com_position
         com_position_final = self.configurations[self.current_state].com_position
-
+        
         if self.current_state==1 and use_parametrized:
             self.pos_offset = pos - ref
+            
 
         if self.current_state==2 and use_parametrized:
 
-            # ref = ref + (self.pos_offset)
-            ref = ref + self.compute_offset(ref)
-            # print('ref ' + str(ref))
-            # print('pos ',str(pos))
+            ref = ref + (self.pos_offset)
+            # ref = ref + self.compute_offset(ref)
+            print('ref ' + str(ref))
+            print('pos ',str(pos))
 
-            if ref < 0.8:
-                if ref > pos:
-                    tracking_gain  = tracking_gain
-                if ref < pos and ref>0.7:
-                    tracking_gain =  tracking_gain * ((ref - 0.7)/0.1)
-                if ref<0.7:
-                    tracking_gain = 0
+            # if ref < 0.8:
+            #     if ref > pos:
+            #         tracking_gain  = tracking_gain
+            #     if ref < pos and ref>0.7:
+            #         tracking_gain =  tracking_gain * ((ref - 0.7)/0.1)
+            #     if ref<0.7:
+            #         tracking_gain = 0
 
-                if self.happy:
-                    self.rpc_command.addString('shy')
-                    self.rpc_client.write(self.rpc_command, self.rpc_response)
-                    self.rpc_command.pop()
-                    self.happy = False
-            else:
-                if not self.happy:
-                    self.rpc_command.addString('happy')
-                    self.rpc_client.write(self.rpc_command, self.rpc_response)
-                    self.rpc_command.pop()
-                    self.happy = True
+            #     if self.happy:
+            #         self.rpc_command.addString('shy')
+            #         self.rpc_client.write(self.rpc_command, self.rpc_response)
+            #         self.rpc_command.pop()
+            #         self.happy = False
+            # else:
+            #     if not self.happy:
+            #         self.rpc_command.addString('happy')
+            #         self.rpc_client.write(self.rpc_command, self.rpc_response)
+            #         self.rpc_command.pop()
+            #         self.happy = True
 
 
             phi_dot =  -tracking_gain * (pos - ref )
@@ -118,6 +119,12 @@ class StateMachine():
                 self.phi = 1.0
             elif self.phi <0.0:
                 self.phi = 0.0
+
+            if phi_dot > 0.2:
+                phi_dot = 0.2
+            elif phi_dot<-0.2:
+                phi_dot = -0.2
+
 
             joint_position = joint_position_initial + (joint_position_final - joint_position_initial) * self.phi
             joint_velocity = phi_dot * (joint_position_final - joint_position_initial)
@@ -136,7 +143,7 @@ class StateMachine():
             com_velocity = (com_position_final - com_position_initial) * (30.0 * (tau)**2 - 60.0 * (tau)**3 + 30.0 * (tau)**4)
             com_acceleration = (com_position_final - com_position_initial) * (60.0 * (tau) - 180.0 * (tau)**2 + 120.0 * (tau)**3)
 
-        return joint_position, joint_velocity, joint_acceleration, com_position, com_velocity, com_acceleration
+        return joint_position, joint_velocity, joint_acceleration, com_position, com_velocity, com_acceleration,ref, pos, phi_dot
 
 
 

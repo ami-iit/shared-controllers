@@ -2,7 +2,9 @@ import resolve_robotics_uri_py
 
 # Model and ControlBoard
 robot_name = "Human"
-urdf_path = str(resolve_robotics_uri_py.resolve_robotics_uri("package://HDERviz/urdfs/humanSubject03_48dof.urdf"))
+# urdf_path = str(resolve_robotics_uri_py.resolve_robotics_uri("package://HDERviz/urdfs/humanSubject03_48dof.urdf"))
+urdf_path = "/usr/local/src/robot/ami/payload_lifting/human-gazebo/humanSubject03/humanSubject03_48dof.urdf"
+
 base_link = "Pelvis"
 
 joints_list = ['jT9T8_rotx',
